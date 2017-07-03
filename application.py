@@ -9,6 +9,7 @@ from helpers import *
 # configure application
 app = Flask(__name__)
 
+
 # ensure responses aren't cached
 if app.config["DEBUG"]:
     @app.after_request
@@ -33,19 +34,55 @@ db = SQL("sqlite:///finance.db")
 @app.route("/")
 @login_required
 def index():
-    return apology("TODO")
+    money = 0
+    stock = db.execute("SELECT shares, ticker FROM purchases WHERE user_id = :id", id=session["user_id"])
+    for singlestock in stock:
+        ticker = singlestock["ticker"]
+        shares = singlestock["shares"]
+        stock = lookup(ticker)
+        total = shares * stock["price"]
+        name = stock["symbol"]
+        money = money + total
+        db.execute("UPDATE purchases SET price=:price, total=:total WHERE user_id=:id AND ticker=:symbol", price=usd(stock["price"]), total=usd(total), id=session["user_id"], symbol=ticker)
+    
+    newmoney = db.execute("SELECT cash FROM users WHERE id=:id", id=session["user_id"])
+    money = money + newmoney[0]["cash"]
+    newstock = db.execute("SELECT * from purchases WHERE user_id=:id", id=session["user_id"])
+    return render_template("index.html", stocks=newstock, cash=usd(newmoney[0]["cash"]), total= usd(money) )
 
 @app.route("/buy", methods=["GET", "POST"])
 @login_required
 def buy():
     """Buy shares of stock."""
-    return apology("TODO")
+    if request.method == "GET":
+        return render_template("buy.html")
+    else:
+        tick = request.form.get("ticker")
+        quote = lookup(tick)
+        if not quote:
+            return apology("Ticker does not exist")
+        shares = int(request.form.get("shares"))
+        if shares <= 0:
+            return apology("Please input a valid number of shares")
+        money = db.execute("SELECT cash FROM users WHERE id = :id", id=session["user_id"])
+        if float(money[0]["cash"]) < quote["price"] * shares:
+            return apology("Not enough money")
+        db.execute("UPDATE users SET cash = cash - :purchase WHERE id = :id", id=session["user_id"], purchase=(quote["price"] * float(shares)))
+        findshares = db.execute("SELECT shares FROM purchases WHERE user_id = :id AND ticker=:ticker", id=session["user_id"], ticker=quote["symbol"])
+
+        if not findshares:
+            db.execute("INSERT INTO purchases (username, shares, price, total, ticker, user_id) VALUES(:username, :shares, :price, :total, :ticker, :id)", username=quote["name"], shares=shares, price=usd(quote["price"]), total=usd(shares * quote["price"]), ticker=quote["symbol"], id=session["user_id"])
+        else:
+            db.execute("UPDATE purchases SET shares=:number, total=:total WHERE user_id=:id AND ticker=:ticker", id=session["user_id"], ticker=quote["symbol"], total=(float(quote["price"])*float(shares)), number=int(findshares[0]['shares']) + int(shares))
+        return redirect(url_for("index"))
 
 @app.route("/history")
 @login_required
 def history():
     """Show history of transactions."""
-    return apology("TODO")
+    histories = db.execute("SELECT * from histories WHERE id=:id", id=session["user_id"])
+    
+    return render_template("history.html", histories=histories)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -96,7 +133,14 @@ def logout():
 @login_required
 def quote():
     """Get stock quote."""
-    return apology("TODO")
+    if request.method == "GET":
+        return render_template("quote.html")
+    else:
+        ticker = request.form.get("ticker")
+        current = lookup(str(ticker))
+        if current == None:
+            return apology("That stock doesn't exist :(")
+        return render_template("quoted.html", quote = current)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -116,8 +160,8 @@ def register():
         else:
             return apology("Password and confirmation must match")
         
-        success = db.execute("INSERT INTO 'users' (username) VALUES (:user)", user=user)
-        if success == None:
+        insert = db.execute("INSERT INTO 'users' ('username','hash') VALUES (:username,:password)", username=user, password=hash)
+        if insert == None:
             return apology("Sorry that username has already been taken")
         return render_template("index.html")
         
@@ -128,4 +172,27 @@ def register():
 @login_required
 def sell():
     """Sell shares of stock."""
-    return apology("TODO")
+    if request.method == "GET":
+        return render_template("sell.html")
+    else:
+        tick = request.form.get("ticker")
+        quote = lookup(tick)
+        if not quote:
+            return apology("Ticker does not exist")
+        shares = int(request.form.get("shares"))
+        if shares <= 0:
+            return apology("Please input a valid number of shares")
+        money = db.execute("SELECT cash FROM users WHERE id = :id", id=session["user_id"])
+        #if shares < int(money[0]["shares"]):
+        #    return apology("You don't have those shares >:(")
+        db.execute("UPDATE users SET cash = cash + :purchase WHERE id = :id", id=session["user_id"], purchase=(quote["price"] * float(shares)))
+        findshares = db.execute("SELECT shares FROM purchases WHERE user_id = :id AND ticker=:ticker", id=session["user_id"], ticker=quote["symbol"])
+        
+        
+        if not findshares:
+            return apology("You don't have those shares >:(")
+        else:
+            if int(findshares[0]['shares']) < int(shares):
+                return apology("You don't have those shares >:(")
+            db.execute("UPDATE purchases SET shares=:number, total=:total WHERE user_id=:id AND ticker=:ticker", id=session["user_id"], ticker=quote["symbol"], total=(float(quote["price"])*float(shares)), number=int(findshares[0]['shares']) - int(shares))
+        return redirect(url_for("index"))

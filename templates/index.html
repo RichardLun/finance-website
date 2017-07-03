@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Index
+{% endblock %}
+
+{% block main %}
+    <table class="table" style="width:100%">
+      <tr>
+        <th>Ticker</th>
+        <th>Stock Name</th> 
+        <th>Number of Shares</th>
+        <th>Price per Share</th>
+        <th>Total Cash</th>
+      </tr>
+    {% for stock in stocks %}
+      <tr>
+        <td>{{ stock.ticker }}</td>
+        <td>{{ stock.username }}</td>
+        <td>{{ stock.shares }}</td> 
+        <td>{{ stock.price }}</td>
+        <td>{{ stock.total }}</td>
+      </tr>
+    {% endfor %}
+      <tr>
+        <td>CASH</td>
+        <td></td><td></td><td></td>
+        <td>{{ cash }}</td>
+      </tr>
+      <tr>
+        <td></td><td></td><td></td> <td></td>
+        <td><b>{{ total }}</b></td>
+      </tr>
+    </table>
+    
+{% endblock %}

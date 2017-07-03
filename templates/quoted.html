@@ -1,0 +1,9 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Stock Quote
+{% endblock %}
+
+{% block main %}
+    <p class="lead">The price of {{quote["symbol"]}} is ${{quote["price"]}} USD</p>
+{% endblock %}
