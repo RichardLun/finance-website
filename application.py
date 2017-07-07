@@ -75,7 +75,7 @@ def buy():
         if not findshares:
             db.execute("INSERT INTO purchases (username, shares, price, total, ticker, user_id) VALUES(:username, :shares, :price, :total, :ticker, :id)", username=quote["name"], shares=shares, price=usd(quote["price"]), total=usd(shares * quote["price"]), ticker=quote["symbol"], id=session["user_id"])
         else:
-            db.execute("UPDATE purchases SET shares=:number, total=:total WHERE user_id=:id AND ticker=:ticker", id=session["user_id"], ticker=quote["symbol"], total=(float(quote["price"])*float(shares)), number=int(findshares[0]['shares']) + int(shares))
+            db.execute("UPDATE purchases SET shares=:number, total=:total WHERE user_id=:id AND ticker=:ticker", id=session["user_id"], ticker=quote["symbol"], total=(float(quote["price"])*float(shares)), number=int(findshares[0]['shares"]) + int(shares))
         return redirect(url_for("index"))
 
 @app.route("/history")
@@ -141,7 +141,7 @@ def quote():
         ticker = request.form.get("ticker")
         current = lookup(str(ticker))
         if current == None:
-            return apology("That stock doesn't exist :(")
+            return apology("That stock doesn"t exist :(")
         return render_template("quoted.html", quote = current)
 
 @app.route("/register", methods=["GET", "POST"])
@@ -162,7 +162,7 @@ def register():
         else:
             return apology("Password and confirmation must match")
         
-        insert = db.execute("INSERT INTO 'users' ('username','hash') VALUES (:username,:password)", username=user, password=hash)
+        insert = db.execute("INSERT INTO "users" ("username","hash") VALUES (:username,:password)", username=user, password=hash)
         if insert == None:
             return apology("Sorry that username has already been taken")
         return render_template("index.html")
@@ -186,15 +186,15 @@ def sell():
             return apology("Please input a valid number of shares")
         money = db.execute("SELECT cash FROM users WHERE id = :id", id=session["user_id"])
         #if shares < int(money[0]["shares"]):
-        #    return apology("You don't have those shares >:(")
+        #    return apology("You don"t have those shares >:(")
         db.execute("UPDATE users SET cash = cash + :purchase WHERE id = :id", id=session["user_id"], purchase=(quote["price"] * float(shares)))
         findshares = db.execute("SELECT shares FROM purchases WHERE user_id = :id AND ticker=:ticker", id=session["user_id"], ticker=quote["symbol"])
         
         
         if not findshares:
-            return apology("You don't have those shares >:(")
+            return apology("You don"t have those shares >:(")
         else:
-            if int(findshares[0]['shares']) < int(shares):
+            if int(findshares[0]["shares"]) < int(shares):
                 return apology("You don't have those shares >:(")
             db.execute("UPDATE purchases SET shares=:number, total=:total WHERE user_id=:id AND ticker=:ticker", id=session["user_id"], ticker=quote["symbol"], total=(float(quote["price"])*float(shares)), number=int(findshares[0]['shares']) - int(shares))
         return redirect(url_for("index"))
