@@ -1,3 +1,4 @@
+import os
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_session import Session
@@ -196,3 +197,7 @@ def sell():
                 return apology("You don't have those shares >:(")
             db.execute("UPDATE purchases SET shares=:number, total=:total WHERE user_id=:id AND ticker=:ticker", id=session["user_id"], ticker=quote["symbol"], total=(float(quote["price"])*float(shares)), number=int(findshares[0]['shares']) - int(shares))
         return redirect(url_for("index"))
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
