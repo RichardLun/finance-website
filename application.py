@@ -75,7 +75,7 @@ def buy():
         if not findshares:
             db.execute("INSERT INTO purchases (username, shares, price, total, ticker, user_id) VALUES(:username, :shares, :price, :total, :ticker, :id)", username=quote["name"], shares=shares, price=usd(quote["price"]), total=usd(shares * quote["price"]), ticker=quote["symbol"], id=session["user_id"])
         else:
-            db.execute("UPDATE purchases SET shares=:number, total=:total WHERE user_id=:id AND ticker=:ticker", id=session["user_id"], ticker=quote["symbol"], total=(float(quote["price"])*float(shares)), number=int(findshares[0]['shares"]) + int(shares))
+            db.execute("UPDATE purchases SET shares=:number, total=:total WHERE user_id=:id AND ticker=:ticker", id=session["user_id"], ticker=quote["symbol"], total=(float(quote["price"])*float(shares)), number=int(findshares[0]["shares"]) + int(shares))
         return redirect(url_for("index"))
 
 @app.route("/history")
@@ -195,8 +195,8 @@ def sell():
             return apology("You don"t have those shares >:(")
         else:
             if int(findshares[0]["shares"]) < int(shares):
-                return apology("You don't have those shares >:(")
-            db.execute("UPDATE purchases SET shares=:number, total=:total WHERE user_id=:id AND ticker=:ticker", id=session["user_id"], ticker=quote["symbol"], total=(float(quote["price"])*float(shares)), number=int(findshares[0]['shares']) - int(shares))
+                return apology("You don"t have those shares >:(")
+            db.execute("UPDATE purchases SET shares=:number, total=:total WHERE user_id=:id AND ticker=:ticker", id=session["user_id"], ticker=quote["symbol"], total=(float(quote["price"])*float(shares)), number=int(findshares[0]["shares"]) - int(shares))
         return redirect(url_for("index"))
 
 if __name__ == "__main__":
