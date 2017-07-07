@@ -81,7 +81,7 @@ def buy():
 @login_required
 def history():
     """Show history of transactions."""
-    histories = db.execute("SELECT * from histories WHERE id=:id", id=session["user_id"])
+    histories = db.execute("SELECT * from purchases WHERE user_id=:id", id=session["user_id"])
     
     return render_template("history.html", histories=histories)
 
